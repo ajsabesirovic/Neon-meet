@@ -31,7 +31,7 @@ export const getUsers = query({
     return users;
   },
 });
-export const getSingleUser = query({
+export const getUserByClerkId = query({
   args: { clerkId: v.string() },
   handler: async (ctx, args) => {
     const user = await ctx.db
