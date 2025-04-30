@@ -19,7 +19,7 @@ export const syncUser = mutation({
 
     await context.db.insert("users", {
       ...args,
-      role: "candidate",
+      role: "interviewer",
     });
   },
 });
