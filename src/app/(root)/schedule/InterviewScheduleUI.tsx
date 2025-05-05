@@ -4,6 +4,27 @@ import { useMutation, useQuery } from "convex/react";
 import React, { useState } from "react";
 import { api } from "../../../../convex/_generated/api";
 import toast from "react-hot-toast";
+import { Loader2Icon, XIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import UserInfo from "@/components/UserInfo";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { TIME_SLOTS } from "@/constants";
 
 const InterviewScheduleUI = () => {
   const client = useStreamVideoClient();
@@ -106,7 +127,167 @@ const InterviewScheduleUI = () => {
   const availableInterviewers = interviewers.filter(
     (i) => !formData.interviewerIds.includes(i.clerkId)
   );
-  return <div>InterviewScheduleUI</div>;
+  return (
+    <div className="container max-w-7xl mx-auto p-6 space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Interviews</h1>
+          <p className="text-muted-foreground mt-1">
+            Schedule and manage interviews
+          </p>
+        </div>
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg">Schedule Interview</Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-[500px] h-[calc(100vh-200px)] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Schedule Interview</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  placeholder="Interview title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  placeholder="Interview description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Candidate</label>
+                <Select
+                  value={formData.candidateId}
+                  onValueChange={(candidateId) =>
+                    setFormData({ ...formData, candidateId })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select candidate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {candidates.map((candidate) => (
+                      <SelectItem
+                        key={candidate.clerkId}
+                        value={candidate.clerkId}
+                      >
+                        <UserInfo user={candidate} />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Interviewers</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {selectedInterviewers.map((interviewer) => (
+                    <div
+                      key={interviewer.clerkId}
+                      className="inline-flex items-center gap-2 bg-secondary px-2 py-1 rounded-md text-sm"
+                    >
+                      <UserInfo user={interviewer} />
+                      {interviewer.clerkId !== user?.id && (
+                        <button
+                          onClick={() => removeInterviewer(interviewer.clerkId)}
+                          className="hover:text-destructive transition-colors"
+                        >
+                          <XIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {availableInterviewers.length > 0 && (
+                  <Select onValueChange={addInterviewer}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Add interviewer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableInterviewers.map((interviewer) => (
+                        <SelectItem
+                          key={interviewer.clerkId}
+                          value={interviewer.clerkId}
+                        >
+                          <UserInfo user={interviewer} />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date</label>
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={(date) =>
+                      date && setFormData({ ...formData, date })
+                    }
+                    disabled={(date) => date < new Date()}
+                    className="rounded-md border"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Time</label>
+                  <Select
+                    value={formData.time}
+                    onValueChange={(time) => setFormData({ ...formData, time })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_SLOTS.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={scheduleMeeting} disabled={isCreating}>
+                  {isCreating ? (
+                    <>
+                      <Loader2Icon className="mr-2 size-4 animate-spin" />
+                      Scheduling...
+                    </>
+                  ) : (
+                    "Schedule Interview"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
 };
 
 export default InterviewScheduleUI;
